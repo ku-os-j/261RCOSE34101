@@ -45,3 +45,57 @@ int main() {
     
     return 0;
 }
+
+// - Create_Process: 랜덤 데이터로 프로세스 생성
+void Create_Process() {
+    for(int i = 0; i < MAX_PROCESS; i++) {
+        job_queue[i].pid = i + 1;
+        job_queue[i].arrival_time = rand() % 5;      	// 0 ~ 4 사이 랜덤
+        job_queue[i].cpu_burst = (rand() % 5) + 1;   	// 1 ~ 5 사이 랜덤
+        job_queue[i].io_burst = rand() % 5 + 1;      	// 1 ~ 5 사이 랜덤
+        job_queue[i].priority = (rand() % 5) + 1;    	// 1 ~ 5 사이 랜덤
+        
+		// 각 프로세스의 모든 io_trigger 시점을 -1로 초기화
+		for (int j = 0; j < 2; j++) {
+		job_queue[i].io_triggers[j] = -1;
+		}
+		
+		// 한 프로세스가 CPU를 쓰는 동안 I/O 요청은 최대 2번
+		int max_io_count = job_queue[i].cpu_burst - 1;
+        if (max_io_count > 2) max_io_count = 2;
+        if (max_io_count < 0) max_io_count = 0;
+		
+		if (max_io_count == 0) {
+            job_queue[i].io_count = 0;
+        } else {
+            job_queue[i].io_count = rand() % (max_io_count + 1); // 0과 max_io_count 사이 랜덤
+		}
+		
+		for (int j = 0; j < job_queue[i].io_count; j++) {
+			while (1) {
+			// 1과 (cpu_burst - 1) 사이에서 후보 시점을 하나 뽑기
+			int target = (rand() % (job_queue[i].cpu_burst - 1)) + 1;
+        
+			// target이 이전에 이미 뽑힌 시점이랑 겹치는지 검사
+			int check = 0;
+			for (int k = 0; k < j; k++) {
+				if (job_queue[i].io_triggers[k] == target) {
+					check = 1;
+					break;
+				}
+			}
+        
+			// 안 겹칠 경우에만 배열에 저장하고 while문 탈출
+			if (check == 0) {
+				job_queue[i].io_triggers[j] = target;
+				break;
+				}
+			}
+		}
+		
+        job_queue[i].remaining_cpu = job_queue[i].cpu_burst;
+        job_queue[i].waiting_time = 0;
+        job_queue[i].turnaround_time = 0;
+        
+    }
+}
