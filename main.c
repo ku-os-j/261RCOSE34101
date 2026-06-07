@@ -154,6 +154,25 @@ void Schedule(int algo_type) {
                 ready_count++;
             }
         }
+				        
+        // 2. I/O burst가 있다면 Waiting Queue로
+        for (int i = 0; i < waiting_count; i++) {
+            int p_idx = waiting_queue[i];
+            remaining_io[p_idx]--; // 휴식 시간 1초 감소
+            
+            if (remaining_io[p_idx] == 0) {
+                // 다 쉬었으면 Ready Queue로 복귀
+                ready_queue[ready_count] = p_idx;
+                ready_count++;
+                
+                // Waiting Queue에서 제거 및 메우기
+                for (int j = i; j < waiting_count - 1; j++) {
+                    waiting_queue[j] = waiting_queue[j + 1];
+                }
+                waiting_count--;
+                i--; // 배열을 메우면서 바뀐 인덱스로 검사 계속
+            }
+        }
 		
         // 시간 흐름
         current_time++;
@@ -164,7 +183,7 @@ void Schedule(int algo_type) {
             break;
         }
     }
-
+printf("|\n00");
 for (int k = 0; k < current_time; k++)
 	printf("   %02d", k+1);
 }
