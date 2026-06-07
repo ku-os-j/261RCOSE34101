@@ -174,6 +174,83 @@ void Schedule(int algo_type) {
             }
         }
 		
+        // 3. 스케줄링 알고리즘(algo_type)에 따라 Ready Queue에서 프로세스 하나 선택하여 run
+        //    0- FCFS: 먼저 온 프로세스
+        //    1- SJF: remaining_cpu가 가장 짧은 프로세스
+        //    2- Priority: 우선순위가 가장 높은 프로세스
+        //    3- RR: Time Quantum 만큼 실행하고 교체
+        //    4- Preemptive SJF: running 프로세스 포함 remaining_cpu가 가장 짧은 프로세스
+        //    5- Preemptive Priority: running process 포함 우선순위가 가장 높은 프로세스   
+		switch (algo_type) {
+			case 0:// FCFS
+                // CPU가 비어있고, 레디 큐에 대기 중인 프로세스가 있다면 맨 앞 프로세스를 run
+                if (running_pid == -1 && ready_count > 0) {
+                    running_pid = ready_queue[0];
+                    
+                    // 레디 큐 한 칸씩 당기기
+                    for (int j = 0; j < ready_count - 1; j++) {
+                        ready_queue[j] = ready_queue[j + 1];
+                    }
+                    ready_count--;
+                }
+                break;			
+			
+			default:
+				break;
+		}
+		
+        // 4. 선택된 프로세스 실행 -> remaining_cpu 감소
+        //    	만약 remaining_cpu == 0 되면 프로세스 종료 이후 completed_processes 증가
+        //    	종료 시점의 current_time을 이용해 Turnaround time, Waiting time 계산
+        if (running_pid != -1) {
+            job_queue[running_pid].remaining_cpu--;			// running 프로세스 remaining_cpu를 1초 감소
+            
+			if (algo_type == 3) time_quantum_counter++; 	// RR 알고리즘일 경우 타임 퀀텀 카운터를 1초 증가
+			
+			printf("| %d |", job_queue[running_pid].pid);	// Gantt Chart (process running)
+
+            // 일하다가 중간에 I/O 트리거를 만났는지 검사
+            int execution_progress = job_queue[running_pid].cpu_burst - job_queue[running_pid].remaining_cpu;
+            int triggered_io = 0;
+            for (int k = 0; k < job_queue[running_pid].io_count; k++) {
+                if (job_queue[running_pid].io_triggers[k] == execution_progress && job_queue[running_pid].remaining_cpu > 0) {
+                    // 트리거 발동 Waiting Queue로 이동
+                    waiting_queue[waiting_count] = running_pid;
+                    waiting_count++;
+                    remaining_io[running_pid] = job_queue[running_pid].io_burst; // remaining_io(waiting 시간) 세팅
+                    
+                    running_pid = -1; // CPU 비우기
+                    triggered_io = 1;
+                    
+					if (algo_type == 3) time_quantum_counter = 0; // I/O 때문에 쫓겨났으니 RR 카운터 리셋
+					
+					break;
+                }
+            }
+		
+		if (triggered_io == 0 && job_queue[running_pid].remaining_cpu == 0) { 			// 프로세스 완료
+
+                // 종료 시점(Completion Time)
+                job_queue[running_pid].completion_time = current_time + 1; 
+                
+                // 반환 시간(Turnaround Time) = 종료 시간 - 도착 시간
+                job_queue[running_pid].turnaround_time = job_queue[running_pid].completion_time - job_queue[running_pid].arrival_time;
+                
+                running_pid = -1; // 다 썼으니 CPU 비우기
+                completed_processes++; // 완료된 프로세스 개수 증가 (while문 탈출 조건)
+            }
+        } // if (running_pid != -1) 의 닫는 중괄호
+        
+        else {					//(running_pid == -1) 대기 큐나 레디 큐에만 프로세스들이 있을 경우 (Idle 상태)
+			printf("| - |");	// Gantt Chart (idle)
+        }
+		
+		// 대기 시간(Waiting Time)
+		for (int q = 0; q < ready_count; q++) {
+            int p_idx = ready_queue[q];
+            job_queue[p_idx].waiting_time++;
+        }
+		
         // 시간 흐름
         current_time++;
         
