@@ -3,6 +3,7 @@
 #include <time.h>
 
 #define MAX_PROCESS 5
+#define RR_TIME_QUANTUM 2
 
 // 프로세스 정보 구조체 정의
 typedef struct {
@@ -143,6 +144,8 @@ void Schedule(int algo_type) {
     int running_pid = -1; // 현재 CPU에서 실행 중인 프로세스 인덱스 (-1은 CPU가 비어있음을 의미)
 	int prev_running_pid = -1;
 
+	int time_quantum_counter = 0; // RR 알고리즘 전용 카운터
+
     // 모든 프로세스가 완료될 때까지 1단위 시간(Tick)씩 흘려보내는 루프
     while(completed_processes < MAX_PROCESS) {
         
@@ -195,6 +198,37 @@ void Schedule(int algo_type) {
                 }
                 break;			
 			
+			case 3:// Round Robin
+                // CPU가 비어있고, 레디 큐에 대기 중인 프로세스가 있다면 맨 앞 프로세스를 run
+                if (running_pid == -1 && ready_count > 0) {
+                    running_pid = ready_queue[0];
+                    
+                    // 레디 큐 한 칸씩 당기기
+                    for (int j = 0; j < ready_count - 1; j++) {
+                        ready_queue[j] = ready_queue[j + 1];
+                    }
+                    ready_count--;
+                    
+                    time_quantum_counter = 0; // 새로운 프로세스 run -> 카운터 리셋
+                }
+                // 이미 돌아가고 있는 프로세스가 타임 퀀텀을 다 채웠다면
+                else if (running_pid != -1 && time_quantum_counter == RR_TIME_QUANTUM) {
+                    
+                    // 돌아가던 프로세스를 레디 큐의 맨 뒤로
+                    ready_queue[ready_count] = running_pid;
+                    ready_count++;
+                    
+                    // 레디 큐의 맨 앞을 run
+                    running_pid = ready_queue[0];
+                    for (int j = 0; j < ready_count - 1; j++) {
+                        ready_queue[j] = ready_queue[j + 1];
+                    }
+                    ready_count--;
+                    
+                    time_quantum_counter = 0; // 카운터 리셋
+                }
+                break;
+						
 			default:
 				break;
 		}
