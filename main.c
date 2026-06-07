@@ -24,6 +24,13 @@ typedef struct {
 // 전역 변수
 Process job_queue[MAX_PROCESS];
 
+int ready_queue[MAX_PROCESS]; 		// ready 큐에 있는 프로세스들의 PID 저장
+int ready_count;				  	// 현재 ready 큐에 있는 프로세스 수
+	
+int waiting_queue[MAX_PROCESS]; 	// I/O 대기 중인 프로세스 인덱스
+int waiting_count;                  // 현재 waiting 큐에 있는 프로세스 수
+int remaining_io[MAX_PROCESS];  	// 각 프로세스의 남은 I/O 시간
+
 // 함수 프로토타입 선언
 void Create_Process();
 void Config();
@@ -99,3 +106,4 @@ void Create_Process() {
         
     }
 }
+
