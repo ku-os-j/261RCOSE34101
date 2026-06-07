@@ -31,6 +31,15 @@ int waiting_queue[MAX_PROCESS]; 	// I/O 대기 중인 프로세스 인덱스
 int waiting_count;                  // 현재 waiting 큐에 있는 프로세스 수
 int remaining_io[MAX_PROCESS];  	// 각 프로세스의 남은 I/O 시간
 
+const char* ALGO_NAMES[] = {
+	"FCFS",
+    "SJF (Non-preemptive)",
+    "Priority (Non-preemptive)",
+    "Round Robin",
+    "Preemptive SJF",
+    "Preemptive Priority"
+};
+
 // 함수 프로토타입 선언
 void Create_Process();
 void Config();
@@ -122,4 +131,40 @@ void Config() {
     }
 		ready_count = 0;
 		waiting_count = 0;
+}
+
+// - Schedule: 메인 시뮬레이션 루프 및 알고리즘 구현
+void Schedule(int algo_type) {
+    printf("\n* %s\n\n|", ALGO_NAMES[algo_type]);
+    
+    int current_time = 0;
+    int completed_processes = 0;
+    
+    int running_pid = -1; // 현재 CPU에서 실행 중인 프로세스 인덱스 (-1은 CPU가 비어있음을 의미)
+	int prev_running_pid = -1;
+
+    // 모든 프로세스가 완료될 때까지 1단위 시간(Tick)씩 흘려보내는 루프
+    while(completed_processes < MAX_PROCESS) {
+        
+        // 1. 현재 시간(current_time)에 도착한 프로세스가 있다면 Job Queue -> Ready Queue로 이동
+		for (int i = 0; i < MAX_PROCESS; i++) {
+            if (job_queue[i].arrival_time == current_time) {
+                // 레디큐의 맨 뒤(ready_count 위치)에 해당 프로세스의 인덱스를 저장
+                ready_queue[ready_count] = i; 
+                ready_count++;
+            }
+        }
+		
+        // 시간 흐름
+        current_time++;
+        
+        // 무한루프 방지
+        if(current_time > 200) {
+            printf("Error: Infinite loop suspected!\n");
+            break;
+        }
+    }
+
+for (int k = 0; k < current_time; k++)
+	printf("   %02d", k+1);
 }
