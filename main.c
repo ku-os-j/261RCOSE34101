@@ -107,3 +107,19 @@ void Create_Process() {
     }
 }
 
+// - Config: 알고리즘 시작 전 큐 및 시스템 초기화
+void Config() {
+	for(int i = 0; i < MAX_PROCESS; i++) {
+		// 각 프로세스의 시간 정보 초기화
+        job_queue[i].remaining_cpu = job_queue[i].cpu_burst;
+        job_queue[i].waiting_time = 0;
+        job_queue[i].turnaround_time = 0;
+		job_queue[i].completion_time = 0;
+		// Ready Queue와 Wating Queue 초기화
+		ready_queue[i] = 0;
+        waiting_queue[i] = 0;
+        remaining_io[i] = 0;
+    }
+		ready_count = 0;
+		waiting_count = 0;
+}
