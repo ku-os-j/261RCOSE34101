@@ -298,3 +298,18 @@ printf("|\n00");
 for (int k = 0; k < current_time; k++)
 	printf("   %02d", k+1);
 }
+
+// - Evaluation: 결과 분석 및 출력
+void Evaluation() {
+    int total_waiting = 0;
+    int total_turnaround = 0;
+    
+    // Schedule 함수에서 계산된 값을 활용
+    for(int i = 0; i < MAX_PROCESS; i++) {
+        total_waiting += job_queue[i].waiting_time;
+        total_turnaround += job_queue[i].turnaround_time;
+    }
+    
+    printf("\n\nAverage Waiting Time: %.2f\n", (float)total_waiting / MAX_PROCESS);
+    printf("Average Turnaround Time: %.2f\n", (float)total_turnaround / MAX_PROCESS);
+}
