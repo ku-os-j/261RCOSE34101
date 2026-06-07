@@ -197,7 +197,60 @@ void Schedule(int algo_type) {
                     ready_count--;
                 }
                 break;			
+		
+			case 1:// SJF
+			    // CPU가 비어있고, 레디 큐에 대기 중인 프로세스가 있다면
+                if (running_pid == -1 && ready_count > 0) {
+                    int shortest_idx = 0; // 일단 0번 자리가 가장 짧다고 가정
+                    
+                    // 레디 큐를 돌면서 가장 remaining_cpu가 작은 프로세스의 레디 큐 인덱스 찾기
+                    for (int j = 1; j < ready_count; j++) {
+                        int current_p = ready_queue[j];
+                        int shortest_p = ready_queue[shortest_idx];
+                        
+                        if (job_queue[current_p].remaining_cpu < job_queue[shortest_p].remaining_cpu) {
+                            shortest_idx = j;
+                        }
+                    }
+                    
+                    // 가장 짧은 프로세스를 run
+                    running_pid = ready_queue[shortest_idx];
+                    
+                    // 레디 큐 한 칸씩 당기기
+                    for (int j = shortest_idx; j < ready_count - 1; j++) {
+                        ready_queue[j] = ready_queue[j + 1];
+                    }
+                    ready_count--;
+                }
+                break;
 			
+			case 2:// Priority
+                // CPU가 비어있고, 레디 큐에 대기 중인 프로세스가 있다면
+                if (running_pid == -1 && ready_count > 0) {
+                    int highest_prio_idx = 0; // 일단 레디 큐의 0번 자리가 우선순위가 가장 높다고 가정
+                    
+                    // 레디 큐를 전부 돌면서 priority 값이 가장 작은 프로세스의 레디 큐 인덱스 찾기
+                    for (int j = 1; j < ready_count; j++) {
+                        int current_p = ready_queue[j];
+                        int highest_p = ready_queue[highest_prio_idx];
+                        
+                        // 우선순위 더 높은 프로세스 탐색 (숫자가 작을수록 우선순위가 높음) 
+                        if (job_queue[current_p].priority < job_queue[highest_p].priority) {
+                            highest_prio_idx = j;
+                        }
+                    }
+                    
+                    // 탐색된 가장 우선순위가 높은 프로세스를 run
+                    running_pid = ready_queue[highest_prio_idx];
+                    
+                    // 레디 큐 한 칸씩 당기기
+                    for (int j = highest_prio_idx; j < ready_count - 1; j++) {
+                        ready_queue[j] = ready_queue[j + 1];
+                    }
+                    ready_count--;
+                }
+                break;
+						
 			case 3:// Round Robin
                 // CPU가 비어있고, 레디 큐에 대기 중인 프로세스가 있다면 맨 앞 프로세스를 run
                 if (running_pid == -1 && ready_count > 0) {
