@@ -281,7 +281,75 @@ void Schedule(int algo_type) {
                     time_quantum_counter = 0; // 카운터 리셋
                 }
                 break;
+					
+			case 4: // Preemptive SJF
+				// 현재 CPU가 비어있다면 레디 큐에서 가장 remaining_cpu가 짧은 프로세스를 run
+				if (running_pid == -1 && ready_count > 0) {
+					int shortest_idx = 0;
+					for (int j = 1; j < ready_count; j++) {
+						if (job_queue[ready_queue[j]].remaining_cpu < job_queue[ready_queue[shortest_idx]].remaining_cpu) {
+							shortest_idx = j;
+						}
+					}
+					running_pid = ready_queue[shortest_idx];
+					for (int j = shortest_idx; j < ready_count - 1; j++) ready_queue[j] = ready_queue[j + 1];
+					ready_count--;
+				}
+				// 현재 일하는 프로세스가 있는데 레디 큐에 더 짧은 프로세스가 있다면 preemption 발생
+				else if (running_pid != -1 && ready_count > 0) {
+					int shortest_idx = 0;
+					for (int j = 1; j < ready_count; j++) {
+						if (job_queue[ready_queue[j]].remaining_cpu < job_queue[ready_queue[shortest_idx]].remaining_cpu) {
+							shortest_idx = j;
+						}
+					}
+					if (job_queue[ready_queue[shortest_idx]].remaining_cpu < job_queue[running_pid].remaining_cpu) {
 						
+						// 일하던 프로세스 레디 큐로 이동
+						ready_queue[ready_count] = running_pid;
+						ready_count++;
+						
+						// 더 짧은 프로세스를 run
+						running_pid = ready_queue[shortest_idx];
+						for (int j = shortest_idx; j < ready_count - 1; j++) ready_queue[j] = ready_queue[j + 1];
+						ready_count--;
+					}
+				}
+				break;
+			
+			case 5: // Preemptive Priority
+				// 현재 CPU가 비어있다면 레디 큐에서 우선순위 가장 높은(우선순위 값이 가장 낮은) 프로세스를 run
+				if (running_pid == -1 && ready_count > 0) {
+					int highest_prio_idx = 0;
+					for (int j = 1; j < ready_count; j++) {
+						if (job_queue[ready_queue[j]].priority < job_queue[ready_queue[highest_prio_idx]].priority) {
+							highest_prio_idx = j;
+						}
+					}
+					running_pid = ready_queue[highest_prio_idx];
+					for (int j = highest_prio_idx; j < ready_count - 1; j++) ready_queue[j] = ready_queue[j + 1];
+					ready_count--;
+				}
+				// 현재 일하는 프로세스가 있는데 레디 큐에 우선순위 값이 더 작은 프로세스가 있다면 preemption 발생
+				else if (running_pid != -1 && ready_count > 0) {
+					int highest_prio_idx = 0;
+					for (int j = 1; j < ready_count; j++) {
+						if (job_queue[ready_queue[j]].priority < job_queue[ready_queue[highest_prio_idx]].priority) {
+							highest_prio_idx = j;
+						}
+					}
+					if (job_queue[ready_queue[highest_prio_idx]].priority < job_queue[running_pid].priority) {
+						
+						ready_queue[ready_count] = running_pid;
+						ready_count++;
+						
+						running_pid = ready_queue[highest_prio_idx];
+						for (int j = highest_prio_idx; j < ready_count - 1; j++) ready_queue[j] = ready_queue[j + 1];
+						ready_count--;
+					}
+				}
+				break;
+							
 			default:
 				break;
 		}
